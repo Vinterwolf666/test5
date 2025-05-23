@@ -22,8 +22,8 @@ jobs:
           # Descargar y ejecutar Dependency-Check desde Docker
           docker pull owasp/dependency-check
           
-          # Ejecutar Dependency-Check y montar el directorio de salida correctamente
-          docker run --rm -v $(pwd)/repo:/src -v $(pwd)/dependency-check-report:/src/dependency-check-report owasp/dependency-check --project "My Project" --scan /src --out /src/dependency-check-report --format "XML" --debug
+          # Ejecutar Dependency-Check con una JVM sin la librería JDWP
+          docker run --rm -v $(pwd)/repo:/src -v $(pwd)/dependency-check-report:/src/dependency-check-report owasp/dependency-check --project "My Project" --scan /src --out /src/dependency-check-report --format "XML" --debug -Djava.awt.headless=true
 
       # 3. Instalar GitSecrets para escanear secretos en el código
       - name: 🔧 Install GitSecrets
