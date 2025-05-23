@@ -19,7 +19,7 @@ jobs:
       # 2. Instalar Dependency-Check (JAR) para escanear vulnerabilidades de dependencias
       - name: 🔧 Install Dependency-Check (JAR version)
         run: |
-          # Descargar el archivo JAR de Dependency-Check
+          # Descargar el archivo JAR de Dependency-Check desde Maven Central
           curl -sSL https://repo.maven.apache.org/maven2/org/owasp/dependency-check/6.5.0/dependency-check-6.5.0-release.jar -o dependency-check.jar
 
       # 3. Ejecutar el escaneo de dependencias con Dependency-Check
