@@ -19,29 +19,45 @@ jobs:
       # 2. Instalar Dependency-Check utilizando Homebrew
       - name: 🔧 Install Dependency-Check via Homebrew
         run: |
+          # Actualizar apt-get e instalar wget
           sudo apt-get update
-          sudo apt-get install -y wget
-          wget -qO- https://raw.githubusercontent.com/Homebrew/install/master/install.sh | bash
-          eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
-          brew install dependency-check
+          sudo apt-get install -y wget build-essential
 
-      # 3. Ejecutar el escaneo de dependencias con Dependency-Check
+          # Instalar Homebrew si no está instalado
+          if ! command -v brew &> /dev/null
+          then
+            echo "Homebrew no encontrado, instalando..."
+            /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"
+          fi
+
+          # Asegurarnos de que Homebrew está en el PATH
+          eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+
+          # Instalar Dependency-Check usando Homebrew
+          brew install owasp-dependency-check
+
+      # 3. Verificar que dependency-check se haya instalado correctamente
+      - name: 🔧 Verify Dependency-Check Installation
+        run: |
+          dependency-check --version
+
+      # 4. Ejecutar el escaneo de dependencias con Dependency-Check
       - name: 🛡️ Run Dependency-Check (Vulnerabilities in dependencies)
         run: |
           dependency-check --project "My Project" --scan ./repo --out ./dependency-check-report --format "HTML"
 
-      # 4. Instalar GitSecrets para escanear secretos en el código
+      # 5. Instalar GitSecrets para escanear secretos en el código
       - name: 🔧 Install GitSecrets
         run: |
           sudo apt-get update && sudo apt-get install -y git-secrets
           git secrets --register-aws --global
 
-      # 5. Ejecutar el escaneo de secretos con GitSecrets
+      # 6. Ejecutar el escaneo de secretos con GitSecrets
       - name: 🔍 Run GitSecrets Scan
         run: |
           git secrets --scan --recursive ./repo
 
-      # 6. Opción alternativa para escanear secretos usando TruffleHog
+      # 7. Opción alternativa para escanear secretos usando TruffleHog
       - name: 🔍 Run TruffleHog (Secret scanning)
         run: |
           pip install truffleHog
