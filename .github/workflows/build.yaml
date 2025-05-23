@@ -1,4 +1,4 @@
-name: Full Security Scan (Checkov + SonarCloud)
+name: Dependency and Secret Scan
 
 on:
   push:
@@ -6,58 +6,53 @@ on:
   pull_request:
 
 jobs:
-  security-scan:
+  scan:
     runs-on: ubuntu-latest
+
     steps:
-      # Checkout the repository
-      - name: 📥 Checkout repository
-        uses: actions/checkout@v2  # Usando la versión estable v2
+      # 1. Checkout del repositorio
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v2
 
-      # Install .NET SDK
-      - name: 🧰 Install .NET SDK
-        uses: actions/setup-dotnet@v2  # Usando una versión más estable v2 de .NET SDK
+      # 2. Instalar Dependabot para escanear vulnerabilidades de dependencias
+      - name: 🔧 Install Dependency-Check
+        run: |
+          curl -sSL https://dl.bintray.com/jeremydmiller/dependency-check/dependency-check-6.5.0.zip -o dependency-check.zip
+          unzip dependency-check.zip -d dependency-check
+          export PATH=$PATH:$(pwd)/dependency-check/bin
+
+      # 3. Ejecutar el escaneo de dependencias
+      - name: 🛡️ Run Dependency-Check (Vulnerabilities in dependencies)
+        run: |
+          dependency-check --project "My Project" --scan . --out ./dependency-check-report --format "HTML"
+
+      # 4. Subir el reporte de dependencias como artefacto
+      - name: 📊 Upload Dependency-Check Report
+        uses: actions/upload-artifact@v3
         with:
-          dotnet-version: '8.0.x'
+          name: dependency-check-report
+          path: ./dependency-check-report/*
 
-      # --- Checkov Installation ---
-      - name: 🔧 Install Checkov
+      # 5. Instalar GitSecrets para escanear secretos en el código
+      - name: 🔧 Install GitSecrets
         run: |
-          curl -sSL https://install.python-poetry.org | python3 - 
-          python3 -m venv checkov-env
-          source checkov-env/bin/activate
-          pip install checkov
+          sudo apt-get update && sudo apt-get install -y git-secrets
+          git secrets --register-aws --global
 
-      # Run Checkov - Infrastructure as Code (IaC) scan
-      - name: 🔍 Run Checkov - Infrastructure as Code (IaC) scan
+      # 6. Ejecutar el escaneo de secretos con GitSecrets
+      - name: 🔍 Run GitSecrets Scan
         run: |
-          # Cambia './infraestructura' a la ruta de tus archivos IaC, por ejemplo:
-          checkov -d ./infraestructura -o json > checkov-report.json || true
+          git secrets --scan --recursive
 
-      # Upload Checkov report as artifact
-      - name: 📊 Upload Checkov report as artifact
-        uses: actions/upload-artifact@v3  # Actualizado a v3
+      # 7. Opción alternativa para escanear secretos usando TruffleHog
+      - name: 🔍 Run TruffleHog (Secret scanning)
+        run: |
+          pip install truffleHog
+          trufflehog --json --max_depth 10 --regex --entropy=True . > trufflehog-report.json
+
+      # 8. Subir el reporte de secretos como artefacto
+      - name: 📊 Upload TruffleHog Secret Report
+        uses: actions/upload-artifact@v3
         with:
-          name: checkov-report
-          path: checkov-report.json
-
-      # --- SonarCloud Integration ---
-      - name: Set up SonarCloud
-        uses: sonarsource/sonarcloud-github-action@v1
-        with:
-          sonarcloud_token: ${{ secrets.SONARCLOUD_TOKEN }}
-
-      # Build and analyze with SonarCloud
-      - name: 🧑‍💻 Build and analyze with SonarCloud
-        run: |
-          # Build project (por ejemplo, con .NET)
-          dotnet build
-          dotnet sonarscanner begin /k:"${{ secrets.SONAR_PROJECT_KEY }}" /d:sonar.login=${{ secrets.SONAR_TOKEN }}
-          dotnet build
-          dotnet sonarscanner end /d:sonar.login=${{ secrets.SONAR_TOKEN }}
-
-      # --- Optional: Upload Checkov results to SonarCloud (if desired) ---
-      - name: Upload Checkov results to SonarCloud
-        run: |
-          # SonarCloud no tiene una integración directa con Checkov, por lo que este paso es opcional.
-          # Si quieres enviar los resultados de Checkov a SonarCloud, necesitarás una herramienta personalizada como "sonarcheckov".
-          echo "Optional step for integration"
+          name: trufflehog-report
+          path: trufflehog-report.json
