@@ -9,9 +9,11 @@ jobs:
   security-scan:
     runs-on: ubuntu-latest
     steps:
+      # Checkout the repository
       - name: 📥 Checkout repository
         uses: actions/checkout@v2
 
+      # Install .NET SDK
       - name: 🧰 Install .NET SDK
         uses: actions/setup-dotnet@v3
         with:
@@ -25,13 +27,15 @@ jobs:
           source checkov-env/bin/activate
           pip install checkov
 
+      # Run Checkov - Infrastructure as Code (IaC) scan
       - name: 🔍 Run Checkov - Infrastructure as Code (IaC) scan
         run: |
           # Cambia './infraestructura' a la ruta de tus archivos IaC, por ejemplo:
           checkov -d ./infraestructura -o json > checkov-report.json || true
 
+      # Upload Checkov report as artifact (using latest version of actions/upload-artifact)
       - name: 📊 Upload Checkov report as artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: checkov-report
           path: checkov-report.json
@@ -40,8 +44,9 @@ jobs:
       - name: Set up SonarCloud
         uses: sonarsource/sonarcloud-github-action@v1
         with:
-          sonarcloud_token: ${{ secrets.SONAR_TOKEN }}  # Usamos SONAR_TOKEN según tu configuración
+          sonarcloud_token: ${{ secrets.SONARCLOUD_TOKEN }}
 
+      # Build and analyze with SonarCloud
       - name: 🧑‍💻 Build and analyze with SonarCloud
         run: |
           # Build project (por ejemplo, con .NET)
