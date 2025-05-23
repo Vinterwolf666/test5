@@ -1,52 +1,22 @@
-name: Dependency Vulnerability Scan with Snyk
-
+---
+name: Checkov
 on:
   push:
     branches:
       - master
-  pull_request:
-    branches:
-      - master
-
 jobs:
-  snyk-scan:
+  build:
+
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-
-      - name: Set up Python (if using Python project)
-        uses: actions/setup-python@v2
+      - uses: actions/checkout@v2
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v4
         with:
-          python-version: '3.x'
-
-      - name: Set up Node.js (if using Node.js project)
-        uses: actions/setup-node@v2
+          python-version: 3.8
+      - name: Test with Checkov
+        id: checkov
+        uses: bridgecrewio/checkov-action@master
         with:
-          node-version: '14'  # Cambia según la versión de tu proyecto
-
-      - name: Install dependencies
-        run: |
-          if [ -f package.json ]; then
-            npm install
-          elif [ -f requirements.txt ]; then
-            pip install -r requirements.txt
-          fi
-
-      - name: Install Snyk
-        run: |
-          npm install -g snyk  # Para Node.js
-          # pip install snyk  # Para Python, si es necesario
-
-      # Aquí pasamos el token como variable de entorno directamente
-      - name: Run Snyk test
-        run: snyk test
-        env:
-          SNYK_TOKEN: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyZWdpb24iOiJ1c19lYXN0IiwianRpIjoiTUxiRlFra0JqdFh1In0.r1q9Z3AuV9wqNhwLm7HfJ759V14S8atwxxn1uzNIIjU  # Token de autenticación de Snyk desde los secretos
-
-      # Opción: Monitorizar el proyecto con Snyk (esto enviará los resultados de vulnerabilidad a Snyk)
-      - name: Monitor project with Snyk (optional)
-        run: snyk monitor
-        env:
-          SNYK_TOKEN: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyZWdpb24iOiJ1c19lYXN0IiwianRpIjoiTUxiRlFra0JqdFh1In0.r1q9Z3AuV9wqNhwLm7HfJ759V14S8atwxxn1uzNIIjU  # Asegúrate de usar el token aquí también
+          directory: example/examplea
+          framework: terraform 
