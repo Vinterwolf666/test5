@@ -1,4 +1,4 @@
-name: Full Security Scan (Snyk Free License)
+name: Full Security Scan (Checkov + SonarCloud)
 
 on:
   push:
@@ -17,42 +17,43 @@ jobs:
         with:
           dotnet-version: '8.0.x'
 
-      - name: 🛠 Install Snyk CLI
+      # --- Checkov Installation ---
+      - name: 🔧 Install Checkov
         run: |
-          curl -Lo snyk https://static.snyk.io/cli/latest/snyk-linux
-          chmod +x ./snyk
-          sudo mv ./snyk /usr/local/bin/snyk
+          curl -sSL https://install.python-poetry.org | python3 -
+          python3 -m venv checkov-env
+          source checkov-env/bin/activate
+          pip install checkov
 
-      - name: 🔐 Authenticate with Snyk
-        run: snyk auth ${{ secrets.SNYK_TOKEN }}
-
-      # --- Dependency Scanning ---
-      - name: 🔍 Snyk dependency test
-        run: snyk test --all-projects --severity-threshold=low --json || true
-
-      - name: 📊 Snyk monitor dependencies
-        run: snyk monitor --all-projects || true
-
-      # --- Code Scanning (workaround for separate target) ---
-      - name: 🗂️ Prepare code folder
+      - name: 🔍 Run Checkov - Infrastructure as Code (IaC) scan
         run: |
-          mkdir -p snyk-code
-          rsync -ar --exclude='snyk-code' --exclude='snyk-iac' ./ snyk-code/
+          # Cambia './infraestructura' a la ruta de tus archivos IaC, por ejemplo:
+          checkov -d ./infraestructura -o json > checkov-report.json || true
 
-      - name: 🔎 Snyk code test
-        run: snyk code test --path=snyk-code --json || true
+      - name: 📊 Upload Checkov report as artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: checkov-report
+          path: checkov-report.json
 
-      - name: 📊 Snyk monitor code
-        run: snyk code monitor --path=snyk-code --project-name="${{ github.repository }}-code" || true
+      # --- SonarCloud Integration ---
+      - name: Set up SonarCloud
+        uses: sonarsource/sonarcloud-github-action@v1
+        with:
+          sonarcloud_token: ${{ secrets.SONARCLOUD_TOKEN }}
 
-      # --- IaC Scanning (workaround for separate target) ---
-      - name: 🗂️ Prepare iac folder
+      - name: 🧑‍💻 Build and analyze with SonarCloud
         run: |
-          mkdir -p snyk-iac
-          rsync -ar --exclude='snyk-code' --exclude='snyk-iac' ./ snyk-iac/
+          # Build project (por ejemplo, con .NET)
+          dotnet build
+          dotnet sonarscanner begin /k:"${{ secrets.SONAR_PROJECT_KEY }}" /d:sonar.login=$SONAR_TOKEN
+          dotnet build
+          dotnet sonarscanner end /d:sonar.login=$SONAR_TOKEN
 
-      - name: 🔍 Snyk Infrastructure as Code (IaC) test
-        run: snyk iac test --all-projects --path=snyk-iac --json || true
-
-      - name: 📊 Snyk Infrastructure as Code monitor
-        run: snyk iac monitor --all-projects --path=snyk-iac --project-name="${{ github.repository }}-iac" || true
+      # --- Optional: Upload Checkov results to SonarCloud (if desired) ---
+      # Esta parte es opcional si deseas agregar los resultados de Checkov directamente a SonarCloud:
+      - name: Upload Checkov results to SonarCloud
+        run: |
+          # Aquí puedes usar una herramienta de integración como "sonarcheckov" si la necesitas.
+          # Sin embargo, sonarcloud no tiene una integración directa con Checkov (como Snyk).
+          echo "Optional step for integration"
