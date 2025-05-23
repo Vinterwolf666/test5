@@ -1,4 +1,4 @@
-name: Checkov and SonarCloud Scan
+name: Dependency and Secret Scan
 
 on:
   push:
@@ -14,44 +14,31 @@ jobs:
       - name: 📥 Checkout Repository
         uses: actions/checkout@v2
 
-      # 2. Instalar .NET SDK (solo si el proyecto es .NET)
-      - name: 🧰 Install .NET SDK
-        uses: actions/setup-dotnet@v2
-        with:
-          dotnet-version: '8.0.x'
-
-      # 3. --- Instalar Checkov ---
-      - name: 🔧 Install Checkov
+      # 2. Instalar Dependency-Check para escanear vulnerabilidades de dependencias
+      - name: 🔧 Install Dependency-Check
         run: |
-          curl -sSL https://install.python-poetry.org | python3 - 
-          python3 -m venv checkov-env
-          source checkov-env/bin/activate
-          pip install checkov
+          curl -sSL https://dl.bintray.com/jeremydmiller/dependency-check/dependency-check-6.5.0.zip -o dependency-check.zip
+          unzip dependency-check.zip -d dependency-check
+          export PATH=$PATH:$(pwd)/dependency-check/bin
 
-      # 4. Ejecutar Checkov (escaneo de IaC)
-      - name: 🔍 Run Checkov - Infrastructure as Code (IaC) scan
+      # 3. Ejecutar el escaneo de dependencias
+      - name: 🛡️ Run Dependency-Check (Vulnerabilities in dependencies)
         run: |
-          # Cambia './infraestructura' a la ruta de tus archivos IaC, por ejemplo:
-          checkov -d ./infraestructura -o json > checkov-report.json || true
+          dependency-check --project "My Project" --scan . --out ./dependency-check-report --format "HTML"
 
-      # 5. Subir el reporte de Checkov como artefacto
-      - name: 📊 Upload Checkov report as artifact
-        uses: actions/upload-artifact@v2
-        with:
-          name: checkov-report
-          path: checkov-report.json
-
-      # 6. --- Configurar SonarCloud ---
-      - name: Set up SonarCloud
-        uses: sonarsource/sonarcloud-github-action@v1
-        with:
-          sonarcloud_token: ${{ secrets.SONAR_TOKEN }}
-
-      # 7. Ejecutar análisis de SonarCloud
-      - name: 🧑‍💻 Build and analyze with SonarCloud
+      # 4. Instalar GitSecrets para escanear secretos en el código
+      - name: 🔧 Install GitSecrets
         run: |
-          # Construir el proyecto y analizar con SonarCloud
-          dotnet build
-          dotnet sonarscanner begin /k:"${{ secrets.SONAR_PROJECT_KEY }}" /d:sonar.login=${{ secrets.SONAR_TOKEN }}
-          dotnet build
-          dotnet sonarscanner end /d:sonar.login=${{ secrets.SONAR_TOKEN }}
+          sudo apt-get update && sudo apt-get install -y git-secrets
+          git secrets --register-aws --global
+
+      # 5. Ejecutar el escaneo de secretos con GitSecrets
+      - name: 🔍 Run GitSecrets Scan
+        run: |
+          git secrets --scan --recursive
+
+      # 6. Opción alternativa para escanear secretos usando TruffleHog
+      - name: 🔍 Run TruffleHog (Secret scanning)
+        run: |
+          pip install truffleHog
+          trufflehog --json --max_depth 10 --regex --entropy=True . > trufflehog-report.json
