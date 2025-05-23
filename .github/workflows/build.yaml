@@ -39,10 +39,12 @@ jobs:
           npm install -g snyk  # Para Node.js
           # pip install snyk  # Para Python, si es necesario
 
+      # Paso de autenticación con Snyk usando el token del secret
+      - name: Authenticate with Snyk
+        run: snyk auth ${{ secrets.SNYK_TOKEN }}
+
       - name: Run Snyk test
         run: snyk test
 
-      - name: Monitor project with Snyk (optional)
+      - name: Monitor project with Snyk (opcional)
         run: snyk monitor
-        env:
-          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}  # Asegúrate de configurar tu token de Snyk en los secretos del repositorio
