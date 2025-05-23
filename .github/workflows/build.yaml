@@ -14,7 +14,7 @@ jobs:
       - name: 📥 Checkout Repository
         uses: actions/checkout@v2
 
-      # 2. Instalar Dependabot para escanear vulnerabilidades de dependencias
+      # 2. Instalar Dependency-Check para escanear vulnerabilidades de dependencias
       - name: 🔧 Install Dependency-Check
         run: |
           curl -sSL https://dl.bintray.com/jeremydmiller/dependency-check/dependency-check-6.5.0.zip -o dependency-check.zip
@@ -26,33 +26,19 @@ jobs:
         run: |
           dependency-check --project "My Project" --scan . --out ./dependency-check-report --format "HTML"
 
-      # 4. Subir el reporte de dependencias como artefacto
-      - name: 📊 Upload Dependency-Check Report
-        uses: actions/upload-artifact@v3
-        with:
-          name: dependency-check-report
-          path: ./dependency-check-report/*
-
-      # 5. Instalar GitSecrets para escanear secretos en el código
+      # 4. Instalar GitSecrets para escanear secretos en el código
       - name: 🔧 Install GitSecrets
         run: |
           sudo apt-get update && sudo apt-get install -y git-secrets
           git secrets --register-aws --global
 
-      # 6. Ejecutar el escaneo de secretos con GitSecrets
+      # 5. Ejecutar el escaneo de secretos con GitSecrets
       - name: 🔍 Run GitSecrets Scan
         run: |
           git secrets --scan --recursive
 
-      # 7. Opción alternativa para escanear secretos usando TruffleHog
+      # 6. Opción alternativa para escanear secretos usando TruffleHog
       - name: 🔍 Run TruffleHog (Secret scanning)
         run: |
           pip install truffleHog
           trufflehog --json --max_depth 10 --regex --entropy=True . > trufflehog-report.json
-
-      # 8. Subir el reporte de secretos como artefacto
-      - name: 📊 Upload TruffleHog Secret Report
-        uses: actions/upload-artifact@v3
-        with:
-          name: trufflehog-report
-          path: trufflehog-report.json
