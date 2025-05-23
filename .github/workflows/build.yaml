@@ -16,35 +16,21 @@ jobs:
           git clone https://github.com/${{ github.repository }} repo
           cd repo
 
-      # 2. Instalar Dependency-Check utilizando Homebrew
-      - name: 🔧 Install Dependency-Check via Homebrew
+      # 2. Descargar OWASP Dependency-Check directamente desde GitHub
+      - name: 🔧 Download OWASP Dependency-Check
         run: |
-          # Actualizar apt-get e instalar wget
-          sudo apt-get update
-          sudo apt-get install -y wget build-essential
+          # Descargar OWASP Dependency-Check JAR
+          curl -L -o dependency-check.jar https://github.com/jeremydmiller/dependency-check/releases/download/v6.5.0/dependency-check-6.5.0-release.jar
 
-          # Instalar Homebrew si no está instalado
-          if ! command -v brew &> /dev/null
-          then
-            echo "Homebrew no encontrado, instalando..."
-            /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"
-          fi
-
-          # Asegurarnos de que Homebrew está en el PATH
-          eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
-
-          # Instalar Dependency-Check usando Homebrew
-          brew install owasp-dependency-check
-
-      # 3. Verificar que dependency-check se haya instalado correctamente
-      - name: 🔧 Verify Dependency-Check Installation
+      # 3. Verificar la descarga del archivo JAR
+      - name: 🔧 Verify Dependency-Check JAR
         run: |
-          dependency-check --version
+          ls -lh dependency-check.jar
 
       # 4. Ejecutar el escaneo de dependencias con Dependency-Check
       - name: 🛡️ Run Dependency-Check (Vulnerabilities in dependencies)
         run: |
-          dependency-check --project "My Project" --scan ./repo --out ./dependency-check-report --format "HTML"
+          java -jar dependency-check.jar --project "My Project" --scan ./repo --out ./dependency-check-report --format "HTML"
 
       # 5. Instalar GitSecrets para escanear secretos en el código
       - name: 🔧 Install GitSecrets
