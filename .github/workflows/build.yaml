@@ -2,7 +2,7 @@ name: Full Security Scan (Checkov + SonarCloud)
 
 on:
   push:
-    branches: [main]
+    branches: [master]
   pull_request:
 
 jobs:
