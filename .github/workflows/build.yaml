@@ -16,17 +16,16 @@ jobs:
           git clone https://github.com/${{ github.repository }} repo
           cd repo
 
-      # 2. Instalar Dependency-Check para escanear vulnerabilidades de dependencias
-      - name: 🔧 Install Dependency-Check
+      # 2. Instalar Dependency-Check (JAR) para escanear vulnerabilidades de dependencias
+      - name: 🔧 Install Dependency-Check (JAR version)
         run: |
-          curl -sSL https://github.com/jeremydmiller/dependency-check/releases/download/v6.5.0/dependency-check-6.5.0-release.zip -o dependency-check.zip
-          unzip dependency-check.zip -d dependency-check
-          export PATH=$PATH:$(pwd)/dependency-check/bin
+          # Descargar el archivo JAR de Dependency-Check
+          curl -sSL https://repo.maven.apache.org/maven2/org/owasp/dependency-check/6.5.0/dependency-check-6.5.0-release.jar -o dependency-check.jar
 
-      # 3. Ejecutar el escaneo de dependencias
+      # 3. Ejecutar el escaneo de dependencias con Dependency-Check
       - name: 🛡️ Run Dependency-Check (Vulnerabilities in dependencies)
         run: |
-          dependency-check --project "My Project" --scan ./repo --out ./dependency-check-report --format "HTML"
+          java -jar dependency-check.jar --project "My Project" --scan ./repo --out ./dependency-check-report --format "HTML"
 
       # 4. Instalar GitSecrets para escanear secretos en el código
       - name: 🔧 Install GitSecrets
