@@ -1,51 +1,48 @@
-name: Dependency and Secret Scan
+name: Dependency Vulnerability Scan with Snyk
 
 on:
   push:
-    branches: [master]
+    branches:
+      - main
   pull_request:
+    branches:
+      - main
 
 jobs:
-  scan:
+  snyk-scan:
     runs-on: ubuntu-latest
 
     steps:
-      # 1. Clonar el repositorio
-      - name: 📥 Clone Repository
-        run: |
-          git clone https://github.com/${{ github.repository }} repo
-          cd repo
+      - name: Checkout code
+        uses: actions/checkout@v2
 
-      # 2. Instalar Java y Dependency-Check
-      - name: 🔧 Install Dependency-Check (Directamente en el runner)
-        run: |
-          # Instalar dependencias necesarias para Dependency-Check
-          sudo apt-get update
-          sudo apt-get install -y default-jre wget unzip
+      - name: Set up Python (if using Python project)
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'
 
-          # Descargar y descomprimir Dependency-Check
-          wget https://github.com/jeremydmiller/dependency-check/releases/download/v6.5.0/dependency-check-6.5.0-release.zip -O dependency-check.zip
-          unzip dependency-check.zip -d dependency-check
-          chmod +x dependency-check/bin/dependency-check.sh
+      - name: Set up Node.js (if using Node.js project)
+        uses: actions/setup-node@v2
+        with:
+          node-version: '14'  # Cambia según la versión de tu proyecto
 
-      # 3. Ejecutar Dependency-Check (Vulnerabilidades en dependencias)
-      - name: 🛡️ Run Dependency-Check (Vulnerabilities in dependencies)
+      - name: Install dependencies
         run: |
-          ./dependency-check/bin/dependency-check.sh --project "My Project" --scan ./repo --out ./dependency-check-report --format "HTML"
+          if [ -f package.json ]; then
+            npm install
+          elif [ -f requirements.txt ]; then
+            pip install -r requirements.txt
+          fi
 
-      # 4. Instalar GitSecrets para escanear secretos en el código
-      - name: 🔧 Install GitSecrets
+      - name: Install Snyk
         run: |
-          sudo apt-get update && sudo apt-get install -y git-secrets
-          git secrets --register-aws --global
+          npm install -g snyk  # Para Node.js
+          # pip install snyk  # Para Python, si es necesario
 
-      # 5. Ejecutar el escaneo de secretos con GitSecrets
-      - name: 🔍 Run GitSecrets Scan
-        run: |
-          git secrets --scan --recursive ./repo
+      - name: Run Snyk test
+        run: snyk test
 
-      # 6. Opción alternativa para escanear secretos usando TruffleHog
-      - name: 🔍 Run TruffleHog (Secret scanning)
-        run: |
-          pip install truffleHog
-          trufflehog --json --max_depth 10 --regex --entropy=True ./repo > trufflehog-report.json
+      - name: Monitor project with Snyk (optional)
+        run: snyk monitor
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}  # Asegúrate de configurar tu token de Snyk en los secretos del repositorio
