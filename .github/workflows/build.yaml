@@ -31,7 +31,7 @@ jobs:
           checkov -d ./infraestructura -o json > checkov-report.json || true
 
       - name: 📊 Upload Checkov report as artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: checkov-report
           path: checkov-report.json
@@ -54,6 +54,6 @@ jobs:
       # Esta parte es opcional si deseas agregar los resultados de Checkov directamente a SonarCloud:
       - name: Upload Checkov results to SonarCloud
         run: |
-          # Aquí puedes usar una herramienta de integración como "sonarcheckov" si la necesitas.
-          # Sin embargo, sonarcloud no tiene una integración directa con Checkov (como Snyk).
+          # SonarCloud no tiene una integración directa con Checkov, por lo que este paso es opcional.
+          # Si quieres enviar los resultados de Checkov a SonarCloud, necesitarás una herramienta personalizada como "sonarcheckov".
           echo "Optional step for integration"
