@@ -11,7 +11,7 @@ jobs:
     steps:
       # Checkout the repository
       - name: 📥 Checkout repository
-        uses: actions/checkout@v1  # Usando la versión estable v1
+        uses: actions/checkout@v2  # Usando la versión estable v2
 
       # Install .NET SDK
       - name: 🧰 Install .NET SDK
@@ -22,7 +22,7 @@ jobs:
       # --- Checkov Installation ---
       - name: 🔧 Install Checkov
         run: |
-          curl -sSL https://install.python-poetry.org | python3 -
+          curl -sSL https://install.python-poetry.org | python3 - 
           python3 -m venv checkov-env
           source checkov-env/bin/activate
           pip install checkov
@@ -33,9 +33,9 @@ jobs:
           # Cambia './infraestructura' a la ruta de tus archivos IaC, por ejemplo:
           checkov -d ./infraestructura -o json > checkov-report.json || true
 
-      # Upload Checkov report as artifact (con la versión v1 de upload-artifact)
+      # Upload Checkov report as artifact
       - name: 📊 Upload Checkov report as artifact
-        uses: actions/upload-artifact@v1  # Cambié a v1 de upload-artifact
+        uses: actions/upload-artifact@v3  # Actualizado a v3
         with:
           name: checkov-report
           path: checkov-report.json
