@@ -43,10 +43,10 @@ jobs:
       - name: Run Snyk test
         run: snyk test
         env:
-          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}  # Token de autenticación de Snyk desde los secretos
+          SNYK_TOKEN: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyZWdpb24iOiJ1c19lYXN0IiwianRpIjoiTUxiRlFra0JqdFh1In0.r1q9Z3AuV9wqNhwLm7HfJ759V14S8atwxxn1uzNIIjU  # Token de autenticación de Snyk desde los secretos
 
       # Opción: Monitorizar el proyecto con Snyk (esto enviará los resultados de vulnerabilidad a Snyk)
       - name: Monitor project with Snyk (optional)
         run: snyk monitor
         env:
-          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}  # Asegúrate de usar el token aquí también
+          SNYK_TOKEN: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyZWdpb24iOiJ1c19lYXN0IiwianRpIjoiTUxiRlFra0JqdFh1In0.r1q9Z3AuV9wqNhwLm7HfJ759V14S8atwxxn1uzNIIjU  # Asegúrate de usar el token aquí también
