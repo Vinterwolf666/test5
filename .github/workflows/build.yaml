@@ -10,38 +10,44 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1. Instalar Dependency-Check para escanear vulnerabilidades de dependencias
+      # 1. Clonar el repositorio manualmente
+      - name: 📥 Clone Repository
+        run: |
+          git clone https://github.com/${{ github.repository }} repo
+          cd repo
+
+      # 2. Instalar Dependency-Check para escanear vulnerabilidades de dependencias
       - name: 🔧 Install Dependency-Check
         run: |
           curl -sSL https://github.com/jeremydmiller/dependency-check/releases/download/v6.5.0/dependency-check-6.5.0-release.zip -o dependency-check.zip
           unzip dependency-check.zip -d dependency-check
           export PATH=$PATH:$(pwd)/dependency-check/bin
 
-      # 2. Ejecutar el escaneo de dependencias
+      # 3. Ejecutar el escaneo de dependencias
       - name: 🛡️ Run Dependency-Check (Vulnerabilities in dependencies)
         run: |
-          dependency-check --project "My Project" --scan . --out ./dependency-check-report --format "HTML"
+          dependency-check --project "My Project" --scan ./repo --out ./dependency-check-report --format "HTML"
 
-      # 3. Subir el reporte de Dependency-Check como artefacto
+      # 4. Subir el reporte de Dependency-Check como artefacto
       - name: 📊 Upload Dependency-Check report as artifact
         uses: actions/upload-artifact@v2
         with:
           name: dependency-check-report
           path: ./dependency-check-report/*
 
-      # 4. Instalar GitSecrets para escanear secretos en el código
+      # 5. Instalar GitSecrets para escanear secretos en el código
       - name: 🔧 Install GitSecrets
         run: |
           sudo apt-get update && sudo apt-get install -y git-secrets
           git secrets --register-aws --global
 
-      # 5. Ejecutar el escaneo de secretos con GitSecrets
+      # 6. Ejecutar el escaneo de secretos con GitSecrets
       - name: 🔍 Run GitSecrets Scan
         run: |
-          git secrets --scan --recursive
+          git secrets --scan --recursive ./repo
 
-      # 6. Opción alternativa para escanear secretos usando TruffleHog
+      # 7. Opción alternativa para escanear secretos usando TruffleHog
       - name: 🔍 Run TruffleHog (Secret scanning)
         run: |
           pip install truffleHog
-          trufflehog --json --max_depth 10 --regex --entropy=True . > trufflehog-report.json
+          trufflehog --json --max_depth 10 --regex --entropy=True ./repo > trufflehog-report.json
