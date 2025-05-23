@@ -16,34 +16,24 @@ jobs:
           git clone https://github.com/${{ github.repository }} repo
           cd repo
 
-      # 2. Descargar OWASP Dependency-Check directamente desde GitHub
-      - name: 🔧 Download OWASP Dependency-Check
+      # 2. Ejecutar el escaneo de dependencias con Dependency-Check usando Docker
+      - name: 🛡️ Run Dependency-Check (Vulnerabilities in dependencies) with Docker
         run: |
-          # Descargar OWASP Dependency-Check JAR
-          curl -L -o dependency-check.jar https://github.com/jeremydmiller/dependency-check/releases/download/v6.5.0/dependency-check-6.5.0-release.jar
+          docker pull owasp/dependency-check
+          docker run --rm -v $(pwd)/repo:/src owasp/dependency-check --project "My Project" --scan /src --out /src/dependency-check-report --format "HTML"
 
-      # 3. Verificar la descarga del archivo JAR
-      - name: 🔧 Verify Dependency-Check JAR
-        run: |
-          ls -lh dependency-check.jar
-
-      # 4. Ejecutar el escaneo de dependencias con Dependency-Check
-      - name: 🛡️ Run Dependency-Check (Vulnerabilities in dependencies)
-        run: |
-          java -jar dependency-check.jar --project "My Project" --scan ./repo --out ./dependency-check-report --format "HTML"
-
-      # 5. Instalar GitSecrets para escanear secretos en el código
+      # 3. Instalar GitSecrets para escanear secretos en el código
       - name: 🔧 Install GitSecrets
         run: |
           sudo apt-get update && sudo apt-get install -y git-secrets
           git secrets --register-aws --global
 
-      # 6. Ejecutar el escaneo de secretos con GitSecrets
+      # 4. Ejecutar el escaneo de secretos con GitSecrets
       - name: 🔍 Run GitSecrets Scan
         run: |
           git secrets --scan --recursive ./repo
 
-      # 7. Opción alternativa para escanear secretos usando TruffleHog
+      # 5. Opción alternativa para escanear secretos usando TruffleHog
       - name: 🔍 Run TruffleHog (Secret scanning)
         run: |
           pip install truffleHog
