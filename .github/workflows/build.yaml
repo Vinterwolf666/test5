@@ -16,11 +16,14 @@ jobs:
           git clone https://github.com/${{ github.repository }} repo
           cd repo
 
-      # 2. Ejecutar el escaneo de dependencias con Dependency-Check usando Docker
+      # 2. Descargar OWASP Dependency-Check usando Docker
       - name: 🛡️ Run Dependency-Check (Vulnerabilities in dependencies) with Docker
         run: |
+          # Descargar y ejecutar Dependency-Check desde Docker
           docker pull owasp/dependency-check
-          docker run --rm -v $(pwd)/repo:/src owasp/dependency-check --project "My Project" --scan /src --out /src/dependency-check-report --format "HTML"
+          
+          # Ejecutar Dependency-Check y montar el directorio de salida correctamente
+          docker run --rm -v $(pwd)/repo:/src -v $(pwd)/dependency-check-report:/src/dependency-check-report owasp/dependency-check --project "My Project" --scan /src --out /src/dependency-check-report --format "XML" --debug
 
       # 3. Instalar GitSecrets para escanear secretos en el código
       - name: 🔧 Install GitSecrets
