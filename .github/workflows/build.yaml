@@ -33,9 +33,9 @@ jobs:
           # Cambia './infraestructura' a la ruta de tus archivos IaC, por ejemplo:
           checkov -d ./infraestructura -o json > checkov-report.json || true
 
-      # Upload Checkov report as artifact (using latest version of actions/upload-artifact)
+      # Upload Checkov report as artifact (usando la versión estable v2)
       - name: 📊 Upload Checkov report as artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v2
         with:
           name: checkov-report
           path: checkov-report.json
