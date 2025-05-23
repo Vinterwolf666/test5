@@ -16,16 +16,19 @@ jobs:
           git clone https://github.com/${{ github.repository }} repo
           cd repo
 
-      # 2. Instalar Dependency-Check (JAR) para escanear vulnerabilidades de dependencias
-      - name: 🔧 Install Dependency-Check (JAR version)
+      # 2. Instalar Dependency-Check utilizando Homebrew
+      - name: 🔧 Install Dependency-Check via Homebrew
         run: |
-          # Descargar el archivo JAR de Dependency-Check desde Maven Central
-          curl -sSL https://repo.maven.apache.org/maven2/org/owasp/dependency-check/6.5.0/dependency-check-6.5.0-release.jar -o dependency-check.jar
+          sudo apt-get update
+          sudo apt-get install -y wget
+          wget -qO- https://raw.githubusercontent.com/Homebrew/install/master/install.sh | bash
+          eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+          brew install dependency-check
 
       # 3. Ejecutar el escaneo de dependencias con Dependency-Check
       - name: 🛡️ Run Dependency-Check (Vulnerabilities in dependencies)
         run: |
-          java -jar dependency-check.jar --project "My Project" --scan ./repo --out ./dependency-check-report --format "HTML"
+          dependency-check --project "My Project" --scan ./repo --out ./dependency-check-report --format "HTML"
 
       # 4. Instalar GitSecrets para escanear secretos en el código
       - name: 🔧 Install GitSecrets
