@@ -40,15 +40,15 @@ jobs:
       - name: Set up SonarCloud
         uses: sonarsource/sonarcloud-github-action@v1
         with:
-          sonarcloud_token: ${{ secrets.SONARCLOUD_TOKEN }}
+          sonarcloud_token: ${{ secrets.SONAR_TOKEN }}  # Usamos SONAR_TOKEN según tu configuración
 
       - name: 🧑‍💻 Build and analyze with SonarCloud
         run: |
           # Build project (por ejemplo, con .NET)
           dotnet build
-          dotnet sonarscanner begin /k:"${{ secrets.SONAR_PROJECT_KEY }}" /d:sonar.login=$SONAR_TOKEN
+          dotnet sonarscanner begin /k:"${{ secrets.SONAR_PROJECT_KEY }}" /d:sonar.login=${{ secrets.SONAR_TOKEN }}
           dotnet build
-          dotnet sonarscanner end /d:sonar.login=$SONAR_TOKEN
+          dotnet sonarscanner end /d:sonar.login=${{ secrets.SONAR_TOKEN }}
 
       # --- Optional: Upload Checkov results to SonarCloud (if desired) ---
       # Esta parte es opcional si deseas agregar los resultados de Checkov directamente a SonarCloud:
