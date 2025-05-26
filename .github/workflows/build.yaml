@@ -1,9 +1,13 @@
----
-name: Checkov
+name: Seguridad y Dependencias
+
 on:
   push:
-    branches:
-      - master
+    branches: [master]
+  pull_request:
+    branches: [master]
+  schedule:
+    - cron: '0 3 * * 1'  # Corre cada lunes a las 3 AM UTC
+
 jobs:
   seguridad:
     runs-on: ubuntu-latest
@@ -17,7 +21,7 @@ jobs:
           args: detect --source=. --report-format=json --report-path=gitleaks-report.json
 
       - name: Subir reporte de Gitleaks como artefacto
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v2
         with:
           name: gitleaks-report
           path: gitleaks-report.json
