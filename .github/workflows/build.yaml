@@ -6,7 +6,7 @@ on:
   pull_request:
     branches: [master]
   schedule:
-    - cron: '0 3 * * 1'
+    - cron: '0 3 * * 1'  # Corre cada lunes a las 3 AM UTC
 
 jobs:
   seguridad:
@@ -25,3 +25,14 @@ jobs:
         with:
           name: gitleaks-report
           path: gitleaks-report.json
+
+      - name: Análisis de dependencias (C#)
+        run: |
+          dotnet restore
+          dotnet list package --vulnerable > dependencias-vulnerables.txt
+
+      - name: Subir reporte de dependencias
+        uses: actions/upload-artifact@v4
+        with:
+          name: dependencias-vulnerables
+          path: dependencias-vulnerables.txt
