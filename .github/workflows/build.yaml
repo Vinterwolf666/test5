@@ -5,18 +5,19 @@ on:
     branches:
       - master
 jobs:
-  build:
-
+  seguridad:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - name: Set up Python 3.8
-        uses: actions/setup-python@v4
+      - name: Checkout del código
+        uses: actions/checkout@v3
+
+      - name: Escaneo de secretos con Gitleaks (JSON)
+        uses: gitleaks/gitleaks-action@v2
         with:
-          python-version: 3.8
-      - name: Test with Checkov
-        id: checkov
-        uses: bridgecrewio/checkov-action@master
+          args: detect --source=. --report-format=json --report-path=gitleaks-report.json
+
+      - name: Subir reporte de Gitleaks como artefacto
+        uses: actions/upload-artifact@v3
         with:
-          directory: example/examplea
-          framework: terraform 
+          name: gitleaks-report
+          path: gitleaks-report.json
